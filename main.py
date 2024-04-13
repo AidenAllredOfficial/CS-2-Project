@@ -1,8 +1,18 @@
+#! ./venv/bin/python3
 # This is the main file for the project.
-# Commit Test
 
-print("Hello World")
-person1 = ["Aiden", 17, "Blind"]
-print(person1[0] + " is a " + str(person1[1]) + " year old boy who is kinda " + person1[2])
+### Imports
+import tsapp
 
-print("Oore is a meanie and an ableist")
+
+
+def main():
+    window = tsapp.GraphicsWindow()
+    
+    while window.is_running:
+        window.finish_frame()
+
+
+if __name__ == "__main__":
+    main()
+
