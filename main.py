@@ -31,24 +31,44 @@ class UnoCard(tsapp.Sprite):
                 f"Card face {face} is invalid, please read the documentation for more info."
             )
 
-        super().__init__(self.get_image(), 0, 0)
+        super().__init__(self._get_image_path(), 0, 0)
 
-    def get_image(self) -> str:
-        if int(self.face) in range(0, 10):
-            return os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}{self.face}.png"
+    def _get_image_path(self) -> str:
+        image_path = ""
+
+        if self.face == "skip":
+            image_path = os.path.join(
+                "assets", "uno_cards", f"uno_card-{self.color}skip.png"
             )
 
-        elif self.face == "skip":
-            return os.path.join("assets", "uno_cards", f"uno_card-{self.color}skip.png")
+        elif self.face == "reverse":
+            image_path = os.path.join(
+                "assets", "uno_cards", f"uno_card-{self.color}reverse.png"
+            )
 
         elif self.face == "+2":
-            return os.path.join(
+            image_path = os.path.join(
                 "assets", "uno_cards", f"uno_card-{self.color}draw2.png"
             )
 
         elif self.face == "+4":
-            return os.path.join("assets", "uno_cards", f"uno_card-wilddraw4.png")
+            image_path = os.path.join("assets", "uno_cards", f"uno_card-wilddraw4.png")
+
+        elif self.face == "wild":
+            image_path = os.path.join("assets", "uno_cards", f"uno_card-wildchange.png")
+
+        elif int(self.face) in range(0, 10):
+            image_path = os.path.join(
+                "assets", "uno_cards", f"uno_card-{self.color}{self.face}.png"
+            )
+
+        else:
+            raise ValueError(f"{self.color}:{self.face} is invalid.")
+
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"image path {image_path} does not exist.")
+
+        return image_path
 
     def _is_valid_color(self, color: str) -> bool:
         """
@@ -87,10 +107,7 @@ class UnoCard(tsapp.Sprite):
 
 
 def main():
-    window = tsapp.GraphicsWindow()
-
-    while window.is_running:
-        window.finish_frame()
+    pass
 
 
 if __name__ == "__main__":
