@@ -10,14 +10,15 @@ import os
 class UnoCard(tsapp.Sprite):
     """
     Class to manage uno card.
-
-    'face' type of the card. 'color' is the color of the card.
-
-    Valid values for 'color' are: 'red', 'green', 'blue', 'yellow', and 'none'
-    Valid values for 'face' are: numbers 0-9, '+2' '+4', 'wild', 'reverse', and 'skip'
     """
 
     def __init__(self, color: str, face: str):
+        """
+        'face' type of the card. 'color' is the color of the card.
+
+        Valid values for 'color' are: 'red', 'green', 'blue', 'yellow', and 'none'
+        Valid values for 'face' are: numbers 0-9, '+2' '+4', 'wild', 'reverse', and 'skip'
+        """
         self.color, self.face = color, face
 
         # Check validity
@@ -105,9 +106,32 @@ class UnoCard(tsapp.Sprite):
         else:
             return False
 
+    def __repr__(self) -> str:
+        return f"<{self.color}:{self.face}>"
+
+    def __str__(self) -> str:
+        return f"{self.color} {self.face}"
+
 
 def main():
-    pass
+    window = tsapp.GraphicsWindow()
+    card_list = list()
+
+    for y, color in enumerate(("red", "green", "yellow", "blue")):
+        for x, face in enumerate((str(i) for i in range(10))):
+            print(x, y)
+
+            card = UnoCard(color, face)
+            card.scale = 0.25
+            card.x = x * 100
+            card.y = y * 140
+            card_list.append(card)
+
+    for card in card_list:
+        window.add_object(card)
+
+    while window.is_running:
+        window.finish_frame()
 
 
 if __name__ == "__main__":
