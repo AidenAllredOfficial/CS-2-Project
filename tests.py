@@ -1,6 +1,6 @@
 #! ./venv/bin/python3
-from main import UnoCard
 import tsapp
+from uno import Deck, UnoCard
 
 
 def test_stack_check():
@@ -17,27 +17,34 @@ def test_stack_check():
         for card_2 in cards:
             print(f"{card_1} - {card_2}: {card_2.can_place_on(card_1)}")
 
-
-def test_render_cards():
     window = tsapp.GraphicsWindow()
-    card_list = list()
+    card_list = Deck().cards
 
-    for y, color in enumerate(("red", "green", "yellow", "blue")):
-        for x, face in enumerate((str(i) for i in range(10))):
-            print(x, y)
 
-            card = UnoCard(color, face)
-            card.scale = 0.25
-            card.x = x * 100
-            card.y = y * 140
-            card_list.append(card)
+def test_render_deck(deck):
+    window = tsapp.GraphicsWindow(1000, 1000)
 
-    for card in card_list:
+    for i, card in enumerate(deck.cards):
+        x = i % 10
+        y = i // 10
+
+        card.scale = 0.25
+        card.x = x * 90
+        card.y = y * 90
+
+    for card in deck.cards:
         window.add_object(card)
 
     while window.is_running:
         window.finish_frame()
 
 
+def print_deck(deck):
+    for card in deck.cards:
+        print(str(card))
+
+
 if __name__ == "__main__":
-    test_render_cards()
+    deck = Deck()
+
+    test_render_deck(deck)
