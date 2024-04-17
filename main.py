@@ -4,9 +4,10 @@
 ### Imports
 
 import tsapp
+import os
 
 
-class UnoCard:
+class UnoCard(tsapp.Sprite):
     """
     Class to manage uno card.
 
@@ -29,6 +30,25 @@ class UnoCard:
             raise ValueError(
                 f"Card face {face} is invalid, please read the documentation for more info."
             )
+
+        super().__init__(self.get_image(), 0, 0)
+
+    def get_image(self) -> str:
+        if int(self.face) in range(0, 10):
+            return os.path.join(
+                "assets", "uno_cards", f"uno_card-{self.color}{self.face}.png"
+            )
+
+        elif self.face == "skip":
+            return os.path.join("assets", "uno_cards", f"uno_card-{self.color}skip.png")
+
+        elif self.face == "+2":
+            return os.path.join(
+                "assets", "uno_cards", f"uno_card-{self.color}draw2.png"
+            )
+
+        elif self.face == "+4":
+            return os.path.join("assets", "uno_cards", f"uno_card-wilddraw4.png")
 
     def _is_valid_color(self, color: str) -> bool:
         """
