@@ -127,6 +127,13 @@ class Deck:
             self.cards.append(UnoCard("none", "wild"))
             self.cards.append(UnoCard("none", "+4"))
 
+    def pull_cards(self, number: int) -> tuple[UnoCard]:
+        pulled_cards: list = list()
+        for _ in range(number):
+            pulled_cards.append(random.choice(self.cards))
+
+        return tuple(pulled_cards)
+
 
 class Player:
     def __init__(self) -> None:
