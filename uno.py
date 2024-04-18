@@ -1,5 +1,6 @@
-import tsapp
 import os
+import tsapp
+import random
 
 
 class UnoCard(tsapp.Sprite):
@@ -7,7 +8,7 @@ class UnoCard(tsapp.Sprite):
     Class to manage uno card.
     """
 
-    def __init__(self, color: str, face: str):
+    def __init__(self, color: str, face: str) -> None:
         """
         'face' type of the card. 'color' is the color of the card.
 
@@ -48,10 +49,10 @@ class UnoCard(tsapp.Sprite):
             )
 
         elif self.face == "+4":
-            image_path = os.path.join("assets", "uno_cards", f"uno_card-wilddraw4.png")
+            image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
 
         elif self.face == "wild":
-            image_path = os.path.join("assets", "uno_cards", f"uno_card-wildchange.png")
+            image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
 
         elif int(self.face) in range(0, 10):
             image_path = os.path.join(
@@ -137,4 +138,7 @@ class Deck:
 
 class Player:
     def __init__(self) -> None:
-        pass
+        self.cards = list()
+
+    def deal_hand(self, deck: Deck) -> None:
+        self.cards = list(deck.pull_cards(7))
