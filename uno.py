@@ -108,6 +108,10 @@ class UnoCard(tsapp.Sprite):
     def __str__(self) -> str:
         return f"{self.color} {self.face}"
 
+    def get_copy(self):
+        """Returns a copy of this uno card"""
+        return UnoCard(self.color, self.face)
+
 
 class Deck:
     def __init__(self) -> None:
@@ -128,17 +132,40 @@ class Deck:
             self.cards.append(UnoCard("none", "wild"))
             self.cards.append(UnoCard("none", "+4"))
 
-    def pull_cards(self, number: int) -> tuple[UnoCard]:
+    def draw_cards(self, number: int) -> tuple[UnoCard]:
         pulled_cards: list = list()
         for _ in range(number):
-            pulled_cards.append(random.choice(self.cards))
+            pulled_cards.append(random.choice(self.cards).get_copy())
 
         return tuple(pulled_cards)
 
 
 class Player:
     def __init__(self) -> None:
-        self.cards = list()
+        self.hand: list[UnoCard] = list()
 
     def deal_hand(self, deck: Deck) -> None:
-        self.cards = list(deck.pull_cards(7))
+        self.hand: list[UnoCard] = list(deck.draw_cards(7))
+
+    def draw_cards(self, deck: Deck, number_of_cards: int) -> None:
+        self.hand.extend(list(deck.draw_cards(number_of_cards)))
+
+    def valid_plays(self, top_card: UnoCard, is_drawing: bool) -> tuple[UnoCard]:
+        cards = list()
+        if not is_drawing:
+            for card in self.hand:
+                if card.can_place_on(top_card):
+                    cards.append(card)
+
+        else:
+            if top_card.face == "+2":
+                for card in self.hand:
+                    if card.face == "+2":
+                        cards.append(card)
+
+            elif top_card.face == "+4":
+                for card in self.hand:
+                    if card.face == "+4":
+                        cards.append(card)
+
+        return tuple(cards)

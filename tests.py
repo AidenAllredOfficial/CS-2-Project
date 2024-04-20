@@ -1,6 +1,6 @@
 #! ./venv/bin/python3
 import tsapp
-from uno import Deck, UnoCard
+from uno import Deck, Player, UnoCard
 
 
 def test_stack_check():
@@ -44,7 +44,20 @@ def print_deck(deck):
         print(str(card))
 
 
+def render_player_hand(deck: Deck) -> None:
+    window = tsapp.GraphicsWindow()
+    player = Player()
+    player.deal_hand(deck)
+
+    for x, card in enumerate(player.hand):
+        card.scale = 0.3
+        card.x = x * 120
+        window.add_object(card)
+
+    while window.is_running:
+        window.finish_frame()
+
+
 if __name__ == "__main__":
     deck = Deck()
-
-    test_render_deck(deck)
+    render_player_hand(deck)
