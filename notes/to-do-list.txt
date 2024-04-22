@@ -1,0 +1,12 @@
+Aiden 
+- [ ] Refactor business logic.
+- [ ] Write some helper functions for keeping track of things.
+
+Oore
+- [ ] Source background image
+- [ ] Source Copyright Free background music. (Check No Copyright Sounds)  
+- [ ] get a mock, non functional ui running in tsapp.
+ 
+Hannah
+- [ ] Design / sketch main menu layout
+- [ ] design / sketch settings menu.

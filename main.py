@@ -31,7 +31,7 @@ def main():
     next_player_draw_amount: int = 0
     winning_player: int = -1
     while True:
-        os.system("clear")
+        os.system("cls" if os.name == "nt" else "clear")
         print(next_player_draw_amount)
 
         while True:
@@ -121,7 +121,7 @@ def main():
                 break
 
         if winning_player != -1:
-            os.system("clear")
+            os.system("cls" if os.name == "nt" else "clear")
             print("PLAYER {winning_player + 1} WON!!!!!")
             break
 
@@ -164,7 +164,7 @@ def choose_card_prompt(playable_cards: list[uno.UnoCard]) -> uno.UnoCard:
         if chosen_card not in playable_cards:
             print("INVALID CARD, Try again")
             input()
-            os.system("clear")
+            os.system("cls" if os.name == "nt" else "clear")
             continue
 
         else:
