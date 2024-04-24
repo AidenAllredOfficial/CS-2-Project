@@ -3,6 +3,55 @@ import tsapp
 import random
 
 
+def get_card_sprite(color, face):
+    image_path = ""
+
+    if face == "skip":
+        image_path = os.path.join("assets", "uno_cards", f"uno_card-{color}skip.png")
+
+    elif face == "reverse":
+        image_path = os.path.join("assets", "uno_cards", f"uno_card-{color}reverse.png")
+
+    elif face == "+2":
+        image_path = os.path.join("assets", "uno_cards", f"uno_card-{color}draw2.png")
+
+    elif face == "+4":
+        image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
+
+    elif face == "wild":
+        image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
+
+    elif int(face) in range(0, 10):
+        image_path = os.path.join("assets", "uno_cards", f"uno_card-{color}{face}.png")
+
+    else:
+        raise ValueError(f"{color}:{face} is invalid.")
+
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"image path {image_path} does not exist.")
+
+    return image_path
+
+
+def card_can_place_on(color_1: str, face_1: str, color_2: str, face_2: str) -> bool:
+    """
+    Function returns whether or not a card can stack on another.
+    """
+
+    # Check if a wild or +4
+    if face_1 in ("wild", "+4"):
+        return True
+
+    if face_1 == face_2:
+        return True
+
+    elif color_1 == color_2:
+        return True
+
+    else:
+        return False
+
+
 class UnoCard(tsapp.Sprite):
     """
     Class to manage uno card.
@@ -30,43 +79,6 @@ class UnoCard(tsapp.Sprite):
 
         super().__init__(self._get_image_path(), 0, 0)
 
-    def _get_image_path(self) -> str:
-        image_path = ""
-
-        if self.face == "skip":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}skip.png"
-            )
-
-        elif self.face == "reverse":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}reverse.png"
-            )
-
-        elif self.face == "+2":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}draw2.png"
-            )
-
-        elif self.face == "+4":
-            image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
-
-        elif self.face == "wild":
-            image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
-
-        elif int(self.face) in range(0, 10):
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}{self.face}.png"
-            )
-
-        else:
-            raise ValueError(f"{self.color}:{self.face} is invalid.")
-
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"image path {image_path} does not exist.")
-
-        return image_path
-
     def _is_valid_color(self, color: str) -> bool:
         """
         Method returns whether or not the given color is valid.
@@ -83,24 +95,6 @@ class UnoCard(tsapp.Sprite):
         special_cards = ("+2", "+4", "reverse", "wild", "skip")
 
         return (face in number_cards) or (face in special_cards)
-
-    def can_place_on(self, uno_card) -> bool:
-        """
-        Method returns whether or not a card can stack on another.
-        """
-
-        # Check if a wild or +4
-        if self.face in ("wild", "+4"):
-            return True
-
-        if self.face == uno_card.face:
-            return True
-
-        elif self.color == uno_card.color:
-            return True
-
-        else:
-            return False
 
     def __repr__(self) -> str:
         return f"<{self.color}:{self.face}>"
