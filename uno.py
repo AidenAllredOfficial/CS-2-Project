@@ -1,171 +1,122 @@
 import os
 import tsapp
 import random
+from dataclasses import dataclass
 
 
-class UnoCard(tsapp.Sprite):
+@dataclass
+class Card:
+    color: str
+    face: str
+
+
+def get_image_path(card) -> str:
     """
-    Class to manage uno card.
+    Returns the path to the image file for a Card
+    """
+    image_path = ""
+
+    if card.face == "skip":
+        image_path = os.path.join(
+            "assets", "uno_cards", f"uno_card-{card.color}skip.png"
+        )
+
+    elif card.face == "reverse":
+        image_path = os.path.join(
+            "assets", "uno_cards", f"uno_card-{card.color}reverse.png"
+        )
+
+    elif card.face == "+2":
+        image_path = os.path.join(
+            "assets", "uno_cards", f"uno_card-{card.color}draw2.png"
+        )
+
+    elif card.face == "+4":
+        image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
+
+    elif card.face == "wild":
+        image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
+
+    elif int(card.face) in range(0, 10):
+        image_path = os.path.join(
+            "assets", "uno_cards", f"uno_card-{card.color}{card.face}.png"
+        )
+
+    else:
+        raise ValueError(f"{card.color}:{card.face} is invalid.")
+
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"image path {image_path} does not exist.")
+
+    return image_path
+
+
+def get_card_sprite(card: Card) -> tsapp.Sprite:
+    return tsapp.Sprite(get_image_path(card), 0, 0)
+
+
+def card_can_place_on(card_1, card_2) -> bool:
+    """
+    Function returns whether or not a card can stack on another.
     """
 
-    def __init__(self, color: str, face: str) -> None:
-        """
-        'face' type of the card. 'color' is the color of the card.
+    # Check if a wild or +4
+    if card_1.face in ("wild", "+4"):
+        return True
 
-        Valid values for 'color' are: 'red', 'green', 'blue', 'yellow', and 'none'
-        Valid values for 'face' are: numbers 0-9, '+2' '+4', 'wild', 'reverse', and 'skip'
-        """
-        self.color, self.face = color, face
+    if card_1.face == card_2.face:
+        return True
 
-        # Check validity
-        if not self._is_valid_color(color):
-            raise ValueError(
-                f"Card color must be either, red, green, yellow, blue, or none. Recieved {color}"
+    elif card_1.color == card_2.color:
+        return True
+
+    else:
+        return False
+
+
+def gen_card() -> Card:
+    """Generates a random new Card"""
+    if 1 <= random.randint(1, 100) <= 8:
+        face = random.choice(("wild", "+4"))
+        return Card(color="none", face=face)
+    else:
+        face = random.choice(
+            (
+                "0",
+                "1",
+                "1",
+                "2",
+                "2",
+                "3",
+                "3",
+                "4",
+                "4",
+                "5",
+                "5",
+                "6",
+                "6",
+                "7",
+                "7",
+                "8",
+                "8",
+                "9",
+                "9",
+                "reverse",
+                "reverse",
+                "+2",
+                "+2",
             )
+        )
+        color = random.choice(("red", "yellow", "blue", "green"))
 
-        if not self._is_valid_face(face):
-            raise ValueError(
-                f"Card face {face} is invalid, please read the documentation for more info."
-            )
-
-        super().__init__(self._get_image_path(), 0, 0)
-
-    def _get_image_path(self) -> str:
-        image_path = ""
-
-        if self.face == "skip":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}skip.png"
-            )
-
-        elif self.face == "reverse":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}reverse.png"
-            )
-
-        elif self.face == "+2":
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}draw2.png"
-            )
-
-        elif self.face == "+4":
-            image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
-
-        elif self.face == "wild":
-            image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
-
-        elif int(self.face) in range(0, 10):
-            image_path = os.path.join(
-                "assets", "uno_cards", f"uno_card-{self.color}{self.face}.png"
-            )
-
-        else:
-            raise ValueError(f"{self.color}:{self.face} is invalid.")
-
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"image path {image_path} does not exist.")
-
-        return image_path
-
-    def _is_valid_color(self, color: str) -> bool:
-        """
-        Method returns whether or not the given color is valid.
-        """
-
-        return color in ("red", "green", "blue", "yellow", "none")
-
-    def _is_valid_face(self, face: str) -> bool:
-        """
-        Method returns whether or not the face is a valid face.
-        """
-
-        number_cards = (str(i) for i in range(10))
-        special_cards = ("+2", "+4", "reverse", "wild", "skip")
-
-        return (face in number_cards) or (face in special_cards)
-
-    def can_place_on(self, uno_card) -> bool:
-        """
-        Method returns whether or not a card can stack on another.
-        """
-
-        # Check if a wild or +4
-        if self.face in ("wild", "+4"):
-            return True
-
-        if self.face == uno_card.face:
-            return True
-
-        elif self.color == uno_card.color:
-            return True
-
-        else:
-            return False
-
-    def __repr__(self) -> str:
-        return f"<{self.color}:{self.face}>"
-
-    def __str__(self) -> str:
-        return f"{self.color} {self.face}"
-
-    def get_copy(self):
-        """Returns a copy of this uno card"""
-        return UnoCard(self.color, self.face)
+        return Card(color=color, face=face)
 
 
-class Deck:
-    def __init__(self) -> None:
-        self.cards = list()
-
-        # numbers 1-9
-        for color in ("red", "yellow", "green", "blue"):
-            for face in tuple(str(i) for i in range(1, 9)) + tuple(
-                ("skip", "reverse", "+2")
-            ):
-                self.cards.append(UnoCard(color, face))
-                self.cards.append(UnoCard(color, face))
-
-            self.cards.append(UnoCard(color, "0"))  # Zero Cards
-
-        # Wild and +4
-        for _ in range(4):
-            self.cards.append(UnoCard("none", "wild"))
-            self.cards.append(UnoCard("none", "+4"))
-
-    def draw_cards(self, number: int) -> tuple[UnoCard]:
-        pulled_cards: list = list()
-        for _ in range(number):
-            pulled_cards.append(random.choice(self.cards).get_copy())
-
-        return tuple(pulled_cards)
+def gen_cards(number_of_cards: int) -> tuple[Card, ...]:
+    """Generates a specified number of new cards."""
+    return tuple((gen_card() for _ in range(number_of_cards)))
 
 
-class Player:
-    def __init__(self) -> None:
-        self.hand: list[UnoCard] = list()
-
-    def deal_hand(self, deck: Deck) -> None:
-        self.hand: list[UnoCard] = list(deck.draw_cards(7))
-
-    def draw_cards(self, deck: Deck, number_of_cards: int) -> None:
-        self.hand.extend(list(deck.draw_cards(number_of_cards)))
-
-    def valid_plays(self, top_card: UnoCard, is_drawing: bool) -> tuple[UnoCard]:
-        cards = list()
-        if not is_drawing:
-            for card in self.hand:
-                if card.can_place_on(top_card):
-                    cards.append(card)
-
-        else:
-            if top_card.face == "+2":
-                for card in self.hand:
-                    if card.face == "+2":
-                        cards.append(card)
-
-            elif top_card.face == "+4":
-                for card in self.hand:
-                    if card.face == "+4":
-                        cards.append(card)
-
-        return tuple(cards)
+def gen_player_hand() -> list[Card]:
+    """Generates a standard player hand"""
+    return list(gen_cards(7))
