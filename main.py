@@ -40,13 +40,13 @@ window = tsapp.GraphicsWindow()
 WIDTH, HEIGHT = window.width, window.height
 
 # Load Background
-background_sprite = tsapp.Sprite("./assets/screens/loading_screen.jpeg", 0, 0)
+background_sprite = tsapp.Sprite("./assets/screens/uno-background2.jpg", 0, 0)
 
 # Zoom background
-if background_sprite.width < background_sprite.height:
+if background_sprite.width / WIDTH < background_sprite.height / HEIGHT:
     background_sprite.scale = WIDTH / background_sprite.width
 else:
-    background_sprite.scale = HEIGHT / background_sprite.height
+    background_sprite.scale = (HEIGHT / background_sprite.height) + 0.01
 
 # Reset Background Position
 background_sprite.center_x = window.center_x
