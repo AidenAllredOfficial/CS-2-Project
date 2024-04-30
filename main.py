@@ -39,6 +39,22 @@ player_hands = tuple((uno.gen_player_hand() for _ in range(4)))
 window = tsapp.GraphicsWindow()
 WIDTH, HEIGHT = window.width, window.height
 
+# Load Background
+background_sprite = tsapp.Sprite("./assets/screens/loading_screen.jpeg", 0, 0)
+
+# Zoom background
+if background_sprite.width < background_sprite.height:
+    background_sprite.scale = WIDTH / background_sprite.width
+else:
+    background_sprite.scale = HEIGHT / background_sprite.height
+
+# Reset Background Position
+background_sprite.center_x = window.center_x
+background_sprite.center_y = window.center_y
+
+window.add_object(background_sprite)
+
+
 game_state = {
     "current_player": 0,
     "game_direction": 1,
@@ -48,9 +64,10 @@ game_state = {
 current_hand = 0
 hand_sprites = display_hand(player_hands[current_hand])
 while window.is_running:
-    if tsapp.was_mouse_pressed():
-        current_hand = (current_hand + 1) % len(player_hands)
-        u.window_remove_list(hand_sprites)
-        hand_sprites = display_hand(player_hands[current_hand])
+    for sprite in hand_sprites:
+        if u.is_sprite_hover(sprite):
+            sprite.scale = 0.3
+        else:
+            sprite.scale = 0.25
 
     window.finish_frame()
