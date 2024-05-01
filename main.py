@@ -46,7 +46,7 @@ background_sprite = tsapp.Sprite("./assets/screens/uno-background2.jpg", 0, 0)
 if background_sprite.width / WIDTH < background_sprite.height / HEIGHT:
     background_sprite.scale = WIDTH / background_sprite.width
 else:
-    background_sprite.scale = (HEIGHT / background_sprite.height) + 0.01
+    background_sprite.scale = (HEIGHT / background_sprite.height) + 0.05
 
 # Reset Background Position
 background_sprite.center_x = window.center_x
