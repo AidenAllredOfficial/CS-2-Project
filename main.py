@@ -291,7 +291,7 @@ window.add_object(deck_sprite)
 
 # Hand init
 player_hands = tuple((uno.gen_player_hand() for _ in range(NUM_PLAYERS)))
-current_player = 0
+current_player = -1
 hand_cards = player_hands[current_player]
 hand_sprites = display_hand(player_hands[current_player])
 
@@ -317,6 +317,8 @@ next_player_draw = 0
 playable_cards = uno.get_playable_cards(hand_cards, top_card, False)
 can_play = True
 draw_check = False
+
+next_turn()
 
 ## Game Loop
 while window.is_running:
@@ -398,35 +400,26 @@ while window.is_running:
 
 # Display Win screen
 
+win_splash = tsapp.Sprite("assets/screens/uno_win_splash.png", 0, 0)
+
+if win_splash.width / WIDTH < win_splash.height / HEIGHT:
+    win_splash.scale = WIDTH / win_splash.width + 0.01
+else:
+    win_splash.scale = (HEIGHT / win_splash.height) + 0.01
+
+win_splash.center = window.center
 
 
+window.add_object(win_splash)
+win_text = tsapp.TextLabel(FONT, 140, WIDTH, 0, window.center_y - 70, f"YOU WIN PLAYER #{winner + 1}!!", (255, 255, 255))
+win_text.x = 0
+win_text.y = HEIGHT - 70
+win_text.width = WIDTH
+win_text.align = "center"
 
+window.add_object(win_text)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+while window.is_running:
+    window.finish_frame()
 
 
