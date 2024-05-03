@@ -54,6 +54,25 @@ def get_image_path(card) -> str:
 def get_card_sprite(card: Card) -> tsapp.Sprite:
     return tsapp.Sprite(get_image_path(card), 0, 0)
 
+def get_playable_cards(cards: list[Card], top_card: Card, is_drawing: bool) -> list[Card]:
+    playable_cards = list()
+
+    if is_drawing:
+        for card in cards:
+            if top_card.face == "+4" and card.face == "+4":
+                playable_cards.append(get_card_copy(card))
+
+            elif top_card.face == "+2" and card.face == "+2":
+                playable_cards.append(get_card_copy(card))
+
+    else: 
+        for card in cards:
+            if card_can_place_on(top_card, card):
+                playable_cards.append(get_card_copy(card))
+
+    return playable_cards
+
+
 
 def card_can_place_on(card_1, card_2) -> bool:
     """
@@ -61,7 +80,7 @@ def card_can_place_on(card_1, card_2) -> bool:
     """
 
     # Check if a wild or +4
-    if card_1.face in ("wild", "+4"):
+    if card_2.face in ("wild", "+4"):
         return True
 
     if card_1.face == card_2.face:
@@ -120,3 +139,6 @@ def gen_cards(number_of_cards: int) -> tuple[Card, ...]:
 def gen_player_hand() -> list[Card]:
     """Generates a standard player hand"""
     return list(gen_cards(7))
+
+def get_card_copy(card: Card) -> Card:
+    return Card(card.color, card.face)

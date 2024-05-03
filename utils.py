@@ -2,6 +2,8 @@ import tsapp
 import uno
 import os
 
+def clamp(m, v, mx):
+    return min(mx, max(m, v))
 
 def destroy_sprite_list(sprites: list[tsapp.Sprite]):
     """Destroys a list of sprites"""
@@ -26,7 +28,7 @@ def sprite_clicked_released(sprite: tsapp.Sprite) -> bool:
     """
     Returns whether or not a sprite was clicked on last frame (mouse released).
     """
-    if tsapp.was_mouse_released and is_sprite_hover(sprite):
+    if tsapp.was_mouse_released() and is_sprite_hover(sprite):
         return True
     else:
         return False
@@ -36,7 +38,7 @@ def sprite_clicked_down(sprite: tsapp.Sprite) -> bool:
     """
     Returns whether or not a sprite was clicked on last frame (mouse pressed down).
     """
-    if tsapp.was_mouse_released and is_sprite_hover(sprite):
+    if tsapp.is_mouse_down() and is_sprite_hover(sprite):
         return True
     else:
         return False
