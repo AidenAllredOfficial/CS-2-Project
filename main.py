@@ -1,11 +1,10 @@
 #! ./venv/bin/python3
 # This is the main file for the project.
 
-### Imports
+# Imports
 
 import tsapp
 import uno
-import os
 import utils as u
 import time
 
@@ -16,29 +15,31 @@ NUM_PLAYERS = 4
 
 # Useful functions
 
+
 def display_hand(hand: list[uno.Card]):
-    starting_x = 120
+    "Displays a players hand, returns the list of sprites."
+    left_pad = 120
     right_pad = 550
-    ending_x = WIDTH - right_pad
+    max_width = WIDTH - (left_pad + right_pad)
     y = HEIGHT - 300
 
     sprites = list()
 
     card_scale = 0.45
-    sample_sprite = uno.get_card_sprite(hand[0])
-    card_offset = min(140, (WIDTH - (starting_x + right_pad)) // len(hand))
+    card_offset = min(140, max_width // len(hand))
 
     for i, card in enumerate(hand):
         sprite = uno.get_card_sprite(card)
         x_offset = card_offset * i
         sprite.scale = card_scale
-        sprite.x = starting_x + x_offset
+        sprite.x = left_pad + x_offset
         sprite.y = y
-        
+
         window.add_object(sprite)
         sprites.append(sprite)
 
     return sprites
+
 
 def display_top_card(card: uno.Card) -> tsapp.Sprite:
     """
@@ -53,6 +54,7 @@ def display_top_card(card: uno.Card) -> tsapp.Sprite:
 
     return sprite
 
+
 def get_deck_hovered_card(cards: list[tsapp.Sprite]) -> int:
     """
     Returns the index of the card that is currently being hovered
@@ -65,15 +67,14 @@ def get_deck_hovered_card(cards: list[tsapp.Sprite]) -> int:
         if hover and not selected:
             selected = True
             return i
-        
+
     return -1
 
-def set_status(text):
-    player_text.text = text
 
 def sound_cardflip():
     sound = tsapp.Sound("assets/sound_files/cardflip_sound.mp3")
     sound.play()
+
 
 def get_color_from_user() -> str:
     set_status("Select a color")
@@ -122,44 +123,59 @@ def get_color_from_user() -> str:
 
         if u.sprite_clicked_released(red_sprite):
             color = "red"
-            
+
         if u.sprite_clicked_released(green_sprite):
             color = "green"
-            
+
         if u.sprite_clicked_released(yellow_sprite):
             color = "yellow"
-            
+
         if u.sprite_clicked_released(blue_sprite):
             color = "blue"
-            
+
         if color is not None:
             break
 
         # Fancy Animations
 
         if u.is_sprite_hover(red_sprite):
-            red_sprite.scale = u.clamp(sprite_scale, red_sprite.scale + 0.1, sprite_scale * 1.1)
+            red_sprite.scale = u.clamp(
+                sprite_scale, red_sprite.scale + 0.1, sprite_scale * 1.1
+            )
         else:
-            red_sprite.scale = u.clamp(sprite_scale, red_sprite.scale - 0.1, sprite_scale * 1.1)
-            
-        if u.is_sprite_hover(green_sprite):
-            green_sprite.scale = u.clamp(sprite_scale, green_sprite.scale + 0.1, sprite_scale * 1.1)
-        else:
-            green_sprite.scale = u.clamp(sprite_scale, green_sprite.scale - 0.1, sprite_scale * 1.1)
-            
-        if u.is_sprite_hover(yellow_sprite):
-            yellow_sprite.scale = u.clamp(sprite_scale, yellow_sprite.scale + 0.1, sprite_scale * 1.1)
-        else:
-            yellow_sprite.scale = u.clamp(sprite_scale, yellow_sprite.scale - 0.1, sprite_scale * 1.1)
-            
-        if u.is_sprite_hover(blue_sprite):
-            blue_sprite.scale = u.clamp(sprite_scale, blue_sprite.scale + 0.1, sprite_scale * 1.1)
-        else:
-            blue_sprite.scale = u.clamp(sprite_scale, blue_sprite.scale - 0.1, sprite_scale * 1.1)
-            
-        if color != None:
-            break
+            red_sprite.scale = u.clamp(
+                sprite_scale, red_sprite.scale - 0.1, sprite_scale * 1.1
+            )
 
+        if u.is_sprite_hover(green_sprite):
+            green_sprite.scale = u.clamp(
+                sprite_scale, green_sprite.scale + 0.1, sprite_scale * 1.1
+            )
+        else:
+            green_sprite.scale = u.clamp(
+                sprite_scale, green_sprite.scale - 0.1, sprite_scale * 1.1
+            )
+
+        if u.is_sprite_hover(yellow_sprite):
+            yellow_sprite.scale = u.clamp(
+                sprite_scale, yellow_sprite.scale + 0.1, sprite_scale * 1.1
+            )
+        else:
+            yellow_sprite.scale = u.clamp(
+                sprite_scale, yellow_sprite.scale - 0.1, sprite_scale * 1.1
+            )
+
+        if u.is_sprite_hover(blue_sprite):
+            blue_sprite.scale = u.clamp(
+                sprite_scale, blue_sprite.scale + 0.1, sprite_scale * 1.1
+            )
+        else:
+            blue_sprite.scale = u.clamp(
+                sprite_scale, blue_sprite.scale - 0.1, sprite_scale * 1.1
+            )
+
+        if color is not None:
+            break
 
         window.finish_frame()
 
@@ -178,15 +194,17 @@ def get_color_from_user() -> str:
 def set_status(text):
     player_text.text = text
 
+
 def animate_hand_frame():
     selected_index = get_deck_hovered_card(hand_sprites)
-    
+
     # Animate hovering over sprites
     for i, sprite in enumerate(hand_sprites):
         if selected_index == i:
             sprite.scale = u.clamp(0.45, sprite.scale + 0.03, 0.55)
         else:
             sprite.scale = u.clamp(0.45, sprite.scale - 0.03, 0.55)
+
 
 def next_turn():
     global current_player
@@ -213,14 +231,13 @@ def next_turn():
     playable_cards = uno.get_playable_cards(hand_cards, top_card, next_player_draw > 0)
 
     can_play = True
-    draw_check = False
     print(playable_cards)
 
     # check drawing
 
-    if next_player_draw > 0 and len(playable_cards) == 0: 
+    if next_player_draw > 0 and len(playable_cards) == 0:
         set_status(f"Cannot play draw {next_player_draw} cards")
-        can_play = False 
+        can_play = False
 
         # Update Sprites
 
@@ -231,18 +248,18 @@ def next_turn():
             hand_cards = player_hands[current_player]
             hand_sprites = display_hand(hand_cards)
             time.sleep(0.2)
-            window.finish_frame() 
-        
+            window.finish_frame()
+
         next_player_draw = 0
 
-    elif next_player_draw > 0 and len(playable_cards) > 0: 
+    elif next_player_draw > 0 and len(playable_cards) > 0:
         pass
         # The section that handles cards will handle this fine
 
     elif next_player_draw == 0 and len(playable_cards) == 0:
         set_status(f"{player_text.text} - You have no cards to play. Draw")
         while window.is_running:
-            if u.sprite_clicked_released(deck_sprite): 
+            if u.sprite_clicked_released(deck_sprite):
                 player_hands[current_player].append(uno.gen_card())
                 hand_cards = player_hands[current_player]
                 u.destroy_sprite_list(hand_sprites)
@@ -259,8 +276,6 @@ def next_turn():
 
 
 # initialization stage
-# Create Player hands
-
 
 window = tsapp.GraphicsWindow(1920, 1080)
 window.framerate = 30
@@ -309,7 +324,7 @@ set_status(f"Player #{current_player + 1} color: {top_card.color}")
 player_increment = 1
 next_player_button = tsapp.Sprite("assets/buttons/next_player_button.png", 0, 0)
 next_player_button.scale = 1.5
-next_player_button.x = WIDTH  - next_player_button.width - 40
+next_player_button.x = WIDTH - next_player_button.width - 40
 next_player_button.y = HEIGHT - next_player_button.height - 40
 window.add_object(next_player_button)
 winner = None
@@ -320,31 +335,33 @@ draw_check = False
 
 next_turn()
 
-## Game Loop
+# Game Loop
 while window.is_running:
     selected_index = get_deck_hovered_card(hand_sprites)
-    
+
     # Animate hovering over sprites
     for i, sprite in enumerate(hand_sprites):
         if selected_index == i:
             sprite.scale = u.clamp(0.45, sprite.scale + 0.03, 0.55)
         else:
             sprite.scale = u.clamp(0.45, sprite.scale - 0.03, 0.55)
-            
-        
-    
+
     # Player selects a card.
-    if u.sprite_clicked_released(hand_sprites[selected_index]) and (selected_index != -1) and can_play:
+    if (
+        u.sprite_clicked_released(hand_sprites[selected_index])
+        and (selected_index != -1)
+        and can_play
+    ):
         selected_card = hand_cards[selected_index]
 
         # If player selected correctly
-        if (selected_card in playable_cards):
+        if selected_card in playable_cards:
             can_play = False
             # play sound effect
             sound_cardflip()
             # Change Top Card
-            top_card_sprite.destroy()  # Clear out old sprite for performance reasons
-            top_card = uno.get_card_copy(player_hands[current_player][selected_index]) 
+            top_card_sprite.destroy()
+            top_card = uno.get_card_copy(player_hands[current_player][selected_index])
             top_card_sprite = display_top_card(top_card)
 
             window.add_object(top_card_sprite)
@@ -380,10 +397,12 @@ while window.is_running:
                     color = get_color_from_user()
                     top_card = uno.Card(color, selected_card.face)
                     set_status(f"Player #{current_player + 1} color: {top_card.color}")
-            
-            
 
+        for i in range(45):
+            animate_hand_frame()
+            window.finish_frame()
 
+        next_turn()
 
     # Next player button
     if u.sprite_clicked_released(next_player_button):
@@ -392,11 +411,7 @@ while window.is_running:
         else:
             next_turn()
 
-
     window.finish_frame()
-    
-
-### Win condition
 
 # Display Win screen
 
@@ -411,7 +426,15 @@ win_splash.center = window.center
 
 
 window.add_object(win_splash)
-win_text = tsapp.TextLabel(FONT, 140, WIDTH, 0, window.center_y - 70, f"YOU WIN PLAYER #{winner + 1}!!", (255, 255, 255))
+win_text = tsapp.TextLabel(
+    FONT,
+    140,
+    WIDTH,
+    0,
+    window.center_y - 70,
+    f"YOU WIN PLAYER #{winner + 1}!!",
+    (255, 255, 255),
+)
 win_text.x = 0
 win_text.y = HEIGHT - 70
 win_text.width = WIDTH
@@ -421,5 +444,3 @@ window.add_object(win_text)
 
 while window.is_running:
     window.finish_frame()
-
-

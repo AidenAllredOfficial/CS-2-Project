@@ -3,6 +3,9 @@ import uno
 import os
 
 def clamp(m, v, mx):
+    """
+    Clamps v between the minimum and maximum value.
+    """
     return min(mx, max(m, v))
 
 def destroy_sprite_list(sprites: list[tsapp.Sprite]):
@@ -83,20 +86,6 @@ def choose_card_prompt(playable_cards: list[uno.Card]) -> uno.Card:
 
         else:
             return chosen_card
-
-
-def choose_color_prompt() -> str:
-    """Prompts the user for a color and parses it"""
-    color = ""
-    while True:
-        color = input("Choose a color: ").strip().lower()
-        if color not in ("red", "green", "blue", "yellow") or color == "":
-            print("Invalid Color: try again")
-
-        else:
-            break
-
-    return color
 
 
 def print_cards(hand: list[uno.Card]) -> None:

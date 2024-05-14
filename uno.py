@@ -10,40 +10,67 @@ class Card:
     face: str
 
 
+def pick_card_easy(hand: list[Card], playable_cards: list[Card]) -> Card:
+    """
+    Returns a randomly picked card from a list of playable cards
+    Should not be called with an empty list of playable cards.
+    """
+    if len(playable_cards) == 0:
+        raise ValueError("List of playable cards is empty!")
+    else:
+        return get_card_copy(random.choice(playable_cards))
+
+
+def pick_card_medium(hand: list[Card], top_card: Card, playable_cards: list[Card]) -> Card:
+    """
+    Picks a card from a list of playable card with some slight strategy
+    attempts to change the color when it is running out of cards to play.
+    """
+    if len(playable_cards) == 0:
+        raise ValueError("List of playable cards is empty!")
+
+    if len(playable_cards) <= 2:  # Attempt to change color if has less than playable cards.
+        # If it can change the color
+        color_change_cards = filter(lambda card: (card.color != top_card.color), playable_cards)
+        if len(color_change_cards) > 0:
+            return random.choice(color_change_cards)
+        else:
+            return random.choice(playable_cards)
+
+    else:  # Keep the color the same
+        return random.choice(filter(lambda card: card.color == top_card.color))
+
+# Todo
+# def pick_card_hard(hand: list[Card], top_card: Card, playable_cards: list[Card]) -> Card:
+
+
 def get_image_path(card) -> str:
     """
     Returns the path to the image file for a Card
     """
     image_path = ""
 
-    if card.face == "skip":
-        image_path = os.path.join(
-            "assets", "uno_cards", f"uno_card-{card.color}skip.png"
-        )
+    match card.face:
+        case "skip":
+            image_path = os.path.join( "assets", "uno_cards", f"uno_card-{card.color}skip.png")
 
-    elif card.face == "reverse":
-        image_path = os.path.join(
-            "assets", "uno_cards", f"uno_card-{card.color}reverse.png"
-        )
+        case "reverse":
+            image_path = os.path.join( "assets", "uno_cards", f"uno_card-{card.color}reverse.png")
 
-    elif card.face == "+2":
-        image_path = os.path.join(
-            "assets", "uno_cards", f"uno_card-{card.color}draw2.png"
-        )
+        case "+2":
+            image_path = os.path.join( "assets", "uno_cards", f"uno_card-{card.color}draw2.png")
 
-    elif card.face == "+4":
-        image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
+        case "+4":
+            image_path = os.path.join("assets", "uno_cards", "uno_card-wilddraw4.png")
 
-    elif card.face == "wild":
-        image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
+        case "wild":
+            image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
 
-    elif int(card.face) in range(0, 10):
-        image_path = os.path.join(
-            "assets", "uno_cards", f"uno_card-{card.color}{card.face}.png"
-        )
+        case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
+            image_path = os.path.join( "assets", "uno_cards", f"uno_card-{card.color}{card.face}.png")
 
-    else:
-        raise ValueError(f"{card.color}:{card.face} is invalid.")
+        case _:
+            raise ValueError(f"{card.color}:{card.face} is invalid.")
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"image path {image_path} does not exist.")
@@ -65,13 +92,12 @@ def get_playable_cards(cards: list[Card], top_card: Card, is_drawing: bool) -> l
             elif top_card.face == "+2" and card.face == "+2":
                 playable_cards.append(get_card_copy(card))
 
-    else: 
+    else:
         for card in cards:
             if card_can_place_on(top_card, card):
                 playable_cards.append(get_card_copy(card))
 
     return playable_cards
-
 
 
 def card_can_place_on(card_1, card_2) -> bool:
@@ -99,37 +125,40 @@ def gen_card() -> Card:
         face = random.choice(("wild", "+4"))
         return Card(color="none", face=face)
     else:
-        face = random.choice(
-            (
-                "0",
-                "1",
-                "1",
-                "2",
-                "2",
-                "3",
-                "3",
-                "4",
-                "4",
-                "5",
-                "5",
-                "6",
-                "6",
-                "7",
-                "7",
-                "8",
-                "8",
-                "9",
-                "9",
-                "reverse",
-                "reverse",
-                "+2",
-                "+2",
-            )
-        )
+        face = random.choice(( "0", "1", "1", "2", "2", "3", "3", "4", "4", "5", "5", "6", "6", "7", "7", "8", "8", "9", "9", "reverse", "reverse", "+2", "+2", "skip", "skip"))
         color = random.choice(("red", "yellow", "blue", "green"))
 
         return Card(color=color, face=face)
 
+def gen_numeric_card() -> Card:
+    """
+    Generates only numeric cards. Used for the first card of the game.
+    """
+    face = random.choice(
+        (
+            "0",
+            "1",
+            "1",
+            "2",
+            "2",
+            "3",
+            "3",
+            "4",
+            "4",
+            "5",
+            "5",
+            "6",
+            "6",
+            "7",
+            "7",
+            "8",
+            "8",
+            "9",
+            "9",
+        )
+    )
+    color = random.choice("red", "green", "yellow", "blue")
+    return Card(face, color)
 
 def gen_cards(number_of_cards: int) -> tuple[Card, ...]:
     """Generates a specified number of new cards."""
