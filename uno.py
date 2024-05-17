@@ -1,7 +1,9 @@
 import os
-import tsapp
 import random
 from dataclasses import dataclass
+
+import tsapp
+
 
 
 @dataclass
@@ -10,7 +12,7 @@ class Card:
     face: str
 
 
-def pick_card_easy(hand: list[Card], playable_cards: list[Card]) -> Card:
+def pick_card_easy(player_hand: list[Card], playable_cards: list[Card]) -> int:
     """
     Returns a randomly picked card from a list of playable cards
     Should not be called with an empty list of playable cards.
@@ -18,7 +20,22 @@ def pick_card_easy(hand: list[Card], playable_cards: list[Card]) -> Card:
     if len(playable_cards) == 0:
         raise ValueError("List of playable cards is empty!")
     else:
-        return get_card_copy(random.choice(playable_cards))
+        return find_matching_card(random.choice(playable_cards), player_hand)
+
+
+def find_matching_card(card, cards) -> int:
+    for i, c in enumerate(cards):
+        if card_match(c, card):
+            return i
+
+    return -1
+
+
+def card_match(card_1: Card, card_2: Card) -> bool:
+    if (card_1.color == card_2.color and card_1.face == card_2.face):
+        return True
+    else:
+        return False
 
 
 def pick_card_medium(hand: list[Card], top_card: Card, playable_cards: list[Card]) -> Card:
@@ -26,6 +43,7 @@ def pick_card_medium(hand: list[Card], top_card: Card, playable_cards: list[Card
     Picks a card from a list of playable card with some slight strategy
     attempts to change the color when it is running out of cards to play.
     """
+    output = None
     if len(playable_cards) == 0:
         raise ValueError("List of playable cards is empty!")
 
@@ -33,15 +51,21 @@ def pick_card_medium(hand: list[Card], top_card: Card, playable_cards: list[Card
         # If it can change the color
         color_change_cards = filter(lambda card: (card.color != top_card.color), playable_cards)
         if len(color_change_cards) > 0:
-            return random.choice(color_change_cards)
+            output = random.choice(color_change_cards)
         else:
-            return random.choice(playable_cards)
+            output = random.choice(playable_cards)
 
     else:  # Keep the color the same
-        return random.choice(filter(lambda card: card.color == top_card.color))
+        output = random.choice(filter(lambda card: card.color == top_card.color))
 
-# Todo
+    return find_matching_card(output, hand)
+
+# TODO
 # def pick_card_hard(hand: list[Card], top_card: Card, playable_cards: list[Card]) -> Card:
+
+
+def get_card_sprite_back() -> tsapp.Sprite:
+    return tsapp.Sprite("assets/BACK_UNO/BACK_UNO.png", 0, 0)
 
 
 def get_image_path(card) -> str:
@@ -67,7 +91,7 @@ def get_image_path(card) -> str:
             image_path = os.path.join("assets", "uno_cards", "uno_card-wildchange.png")
 
         case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9':
-            image_path = os.path.join( "assets", "uno_cards", f"uno_card-{card.color}{card.face}.png")
+            image_path = os.path.join("assets", "uno_cards", f"uno_card-{card.color}{card.face}.png")
 
         case _:
             raise ValueError(f"{card.color}:{card.face} is invalid.")

@@ -3,10 +3,13 @@
 
 # Imports
 
+import time
+
 import tsapp
 import uno
 import utils as u
-import time
+
+import random
 
 # Config
 
@@ -16,8 +19,39 @@ NUM_PLAYERS = 4
 # Useful functions
 
 
+def display_hand_back(hand: list[uno.Card]) -> list[tsapp.Sprite]:
+    """
+    Displays a players hand, but the cards are flipped.
+    Returns a list of sprites.
+    """
+
+    left_pad = 120
+    right_pad = 550
+    max_width = WIDTH - (left_pad + right_pad)
+    y = HEIGHT - 300
+
+    sprites = list()
+
+    card_scale = 0.45
+    card_offset = min(140, max_width // len(hand))
+
+    for i, card in enumerate(hand):
+        sprite = uno.get_card_sprite_back()
+        x_offset = card_offset * i
+        sprite.scale = card_scale
+        sprite.x = left_pad + x_offset
+        sprite.y = y
+
+        window.add_object(sprite)
+        sprites.append(sprite)
+
+    return sprites
+
+
 def display_hand(hand: list[uno.Card]):
-    "Displays a players hand, returns the list of sprites."
+    """
+    Displays a players hand, returns the list of sprites.
+    """
     left_pad = 120
     right_pad = 550
     max_width = WIDTH - (left_pad + right_pad)
@@ -196,10 +230,10 @@ def set_status(text):
 
 
 def animate_hand_frame():
-    selected_index = get_deck_hovered_card(hand_sprites)
+    selected_index = get_deck_hovered_card(player_hand_sprites)
 
     # Animate hovering over sprites
-    for i, sprite in enumerate(hand_sprites):
+    for i, sprite in enumerate(player_hand_sprites):
         if selected_index == i:
             sprite.scale = u.clamp(0.45, sprite.scale + 0.03, 0.55)
         else:
@@ -208,77 +242,121 @@ def animate_hand_frame():
 
 def next_turn():
     global current_player
-    global hand_sprites
-    global hand_cards
-    global playable_cards
-    global can_play
-    global next_player_draw
+    global player_hands_display
 
     # Rolls over once it hits either end
     current_player = (current_player + player_increment) % NUM_PLAYERS
-    hand_cards = player_hands[current_player]
 
-    # Destroy old sprites
-    u.destroy_sprite_list(hand_sprites)
+    u.destroy_sprite_list(player_hands_display)
+    player_hands_display = display_computer_hands()
 
-    # Display sprites
-    hand_sprites = display_hand(hand_cards)
-
-    # Set player text
     set_status(f"Player #{current_player + 1} color: {top_card.color}")
 
-    # Placed here for performance
-    playable_cards = uno.get_playable_cards(hand_cards, top_card, next_player_draw > 0)
 
-    can_play = True
-    print(playable_cards)
+def animate_deck():
+    pass
 
-    # check drawing
 
-    if next_player_draw > 0 and len(playable_cards) == 0:
-        set_status(f"Cannot play draw {next_player_draw} cards")
-        can_play = False
+def player_select_card(player_index: int) -> int:
+    """Guarantees a card will be selected"""
+    print("Selecting card")
+    global next_player_draw
+    global player_hand_sprites
+    global player_hand_cards
+    global current_player
+    while window.is_running:
 
-        # Update Sprites
+        selected_index = get_deck_hovered_card(player_hand_sprites)
+        # if a card has been clicked
+        if (
+            u.sprite_clicked_released(player_hand_sprites[selected_index])
+            and (selected_index != -1)
+        ):
+            selected_card = player_hand_cards[selected_index]
 
+            # If player selected correctly
+            if selected_card in playable_cards:
+                break
+
+        animate_hand_frame()
+        window.finish_frame()
+
+    return selected_index
+
+
+def do_card_action(card: uno.Card):
+    print("Doing card Action")
+    global current_player
+    global player_increment
+    global next_player_draw
+    global top_card
+
+    # Execute Card Action
+    match card.face:
+        case "+2":
+            next_player_draw += 2
+        case "skip":
+            current_player += player_increment
+        case "reverse":
+            player_increment *= -1
+        case "+4":
+            next_player_draw += 4
+        case "wild":
+            return
+
+
+def handle_drawing(player_index) -> (bool, list[uno.Card]):
+    """
+    Makes player draw if they need to.
+    returns whether the player can play or not.
+    """
+    global playable_cards
+    global next_player_draw
+
+    ret = [False, []]
+
+    if next_player_draw == 0 and len(playable_cards) > 0:
+        ret = True, []
+
+    elif next_player_draw > 0 and len(playable_cards) == 0:
         new_cards = uno.gen_cards(next_player_draw)
-        for card in new_cards:
-            player_hands[current_player].append(card)
-            u.destroy_sprite_list(hand_sprites)
-            hand_cards = player_hands[current_player]
-            hand_sprites = display_hand(hand_cards)
-            time.sleep(0.2)
-            window.finish_frame()
 
         next_player_draw = 0
+        print(new_cards)
+        ret = False, new_cards
 
+    # if can stack
     elif next_player_draw > 0 and len(playable_cards) > 0:
-        pass
-        # The section that handles cards will handle this fine
+        ret = True, []
 
-    elif next_player_draw == 0 and len(playable_cards) == 0:
-        set_status(f"{player_text.text} - You have no cards to play. Draw")
-        while window.is_running:
-            if u.sprite_clicked_released(deck_sprite):
-                player_hands[current_player].append(uno.gen_card())
-                hand_cards = player_hands[current_player]
-                u.destroy_sprite_list(hand_sprites)
-                hand_sprites = display_hand(hand_cards)
+    return tuple(ret)
 
-                # update playable cards
-                playable_cards = uno.get_playable_cards(hand_cards, top_card, False)
-                can_play = len(playable_cards) > 0
 
-                break
-            animate_hand_frame()
+def display_computer_hands():
+    sprites = []
+    x = 250
+    y = 100
+    width = 400
+    height = 300
 
-            window.finish_frame()
+    for row, cards in enumerate(player_hands[0:]):
+        for i, card in enumerate(cards):
+            sprite = uno.get_card_sprite_back()
+            sprite.scale = 0.1
+            sprite.x = x + (i * (min(30, width / len(cards))))   # Align X
+            sprite.y = y + (row * (height / len(player_hands)))  # Align Y
+
+            sprites.append(sprite)
+
+    for sprite in sprites:
+        window.add_object(sprite)
+
+    return sprites
 
 
 # initialization stage
-
 window = tsapp.GraphicsWindow(1920, 1080)
-window.framerate = 30
+window.framerate = 60
 WIDTH, HEIGHT = window.width, window.height
 
 # Load Background
@@ -307,9 +385,8 @@ window.add_object(deck_sprite)
 # Hand init
 player_hands = tuple((uno.gen_player_hand() for _ in range(NUM_PLAYERS)))
 current_player = -1
-hand_cards = player_hands[current_player]
-hand_sprites = display_hand(player_hands[current_player])
-
+player_hand_cards = player_hands[0]
+player_hand_sprites = display_hand(player_hand_cards)
 
 # Top card init
 top_card = uno.gen_card()
@@ -329,87 +406,100 @@ next_player_button.y = HEIGHT - next_player_button.height - 40
 window.add_object(next_player_button)
 winner = None
 next_player_draw = 0
-playable_cards = uno.get_playable_cards(hand_cards, top_card, False)
-can_play = True
-draw_check = False
+playable_cards = uno.get_playable_cards(player_hand_cards, top_card, False)
+
+# player Hand displayh
+player_hands_display = display_computer_hands()
 
 next_turn()
 
+
 # Game Loop
 while window.is_running:
-    selected_index = get_deck_hovered_card(hand_sprites)
+    animate_hand_frame()
 
-    # Animate hovering over sprites
-    for i, sprite in enumerate(hand_sprites):
-        if selected_index == i:
-            sprite.scale = u.clamp(0.45, sprite.scale + 0.03, 0.55)
-        else:
-            sprite.scale = u.clamp(0.45, sprite.scale - 0.03, 0.55)
+    if current_player == 0:
+        player_hand = player_hands[0]
+        playable_cards = uno.get_playable_cards(player_hand, top_card, next_player_draw > 0)
 
-    # Player selects a card.
-    if (
-        u.sprite_clicked_released(hand_sprites[selected_index])
-        and (selected_index != -1)
-        and can_play
-    ):
-        selected_card = hand_cards[selected_index]
+        can_play, new_cards = handle_drawing(0)
+        new_cards = list(new_cards)
 
-        # If player selected correctly
-        if selected_card in playable_cards:
-            can_play = False
-            # play sound effect
-            sound_cardflip()
-            # Change Top Card
-            top_card_sprite.destroy()
-            top_card = uno.get_card_copy(player_hands[current_player][selected_index])
-            top_card_sprite = display_top_card(top_card)
+        # Add drawn cards to the deck
+        print(len(new_cards))
+        print(new_cards)
 
-            window.add_object(top_card_sprite)
-
-            # Remove Card from hand
-            player_hands[current_player].pop(selected_index)
-
-            # Rerender Card
-            u.destroy_sprite_list(hand_sprites)
-
-            # Detect win
-            if len(player_hands[current_player]) > 0:
-                hand_cards = player_hands[current_player]
-                hand_sprites = display_hand(hand_cards)
-            else:
-                winner = current_player
+        for card in new_cards:
+            if not window.is_running:
                 break
+            player_hands[0].append(uno.get_card_copy(card))
+            u.destroy_sprite_list(player_hand_sprites)
+            player_hand_sprites = display_hand(player_hands[0])
 
-            # Execute Card Action
-            match selected_card.face:
-                case "+2":
-                    next_player_draw += 2
-                case "skip":
-                    current_player += 1
-                case "reverse":
-                    player_increment *= -1
-                case "+4":
-                    next_player_draw += 4
-                    color = get_color_from_user()
-                    top_card = uno.Card(color, selected_card.face)
-                    set_status(f"Player #{current_player + 1} color: {top_card.color}")
-                case "wild":
-                    color = get_color_from_user()
-                    top_card = uno.Card(color, selected_card.face)
-                    set_status(f"Player #{current_player + 1} color: {top_card.color}")
-
-        for i in range(45):
-            animate_hand_frame()
+            print("Adding cards")
+            time.sleep(0.1)
             window.finish_frame()
 
-        next_turn()
-
-    # Next player button
-    if u.sprite_clicked_released(next_player_button):
         if can_play:
-            set_status(f"{player_text.text} - Play a Card!")
+            playable_cards = uno.get_playable_cards(player_hand, top_card, next_player_draw > 0)
+            selected_index = player_select_card(0)
+            selected_card = player_hand[selected_index]
+            do_card_action(selected_card)
+
+            card_color = None
+            match selected_card.face:
+                case "wild" | "+4":
+                    card_color = get_color_from_user()
+                case _:
+                    card_color = selected_card.color
+
+            # Update Top Card
+            top_card_sprite.destroy()
+            top_card = uno.Card(color=card_color, face=selected_card.face)
+            display_top_card(top_card)
+
+            # Remove from player hand
+            player_hands[0].pop(selected_index)
+
+            # Update sprites.
+            u.destroy_sprite_list(player_hand_sprites)
+            player_hand_sprites = display_hand(player_hands[0])
+            window.finish_frame()
+
         else:
-            next_turn()
+            pass
+
+    else:
+        can_play, new_cards = handle_drawing(current_player)
+        player_hands[current_player].extend(new_cards)
+
+        current_hand = player_hands[current_player]
+        playable_cards = uno.get_playable_cards(current_hand, top_card, next_player_draw > 0)
+        if len(playable_cards) == 0:
+            can_play = False
+
+        if can_play:
+            playable_cards = uno.get_playable_cards(current_hand, top_card, next_player_draw > 0)
+            selected_index = uno.pick_card_easy(current_hand, playable_cards)
+            selected_card = current_hand[selected_index]
+
+            match selected_card.face:
+                case "wild" | "+4":
+                    selected_card.color = random.choice(("red", "green", "blue", "yellow"))
+
+            do_card_action(selected_card)
+
+            top_card = uno.get_card_copy(selected_card)
+            top_card_sprite.destroy()
+            top_card_sprite = display_top_card(top_card)
+
+            # remove from player hand
+            print(len(player_hands[current_player]), selected_index)
+            player_hands[current_player].pop(selected_index)
+
+            time.sleep(2)
+
+    next_turn()
 
     window.finish_frame()
 
@@ -424,7 +514,6 @@ else:
 
 win_splash.center = window.center
 
-
 window.add_object(win_splash)
 win_text = tsapp.TextLabel(
     FONT,
@@ -435,6 +524,7 @@ win_text = tsapp.TextLabel(
     f"YOU WIN PLAYER #{winner + 1}!!",
     (255, 255, 255),
 )
+
 win_text.x = 0
 win_text.y = HEIGHT - 70
 win_text.width = WIDTH

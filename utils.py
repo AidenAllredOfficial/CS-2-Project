@@ -4,14 +4,16 @@ import os
 
 def clamp(m, v, mx):
     """
-    Clamps v between the minimum and maximum value.
+    Clamps value between the minimum and maximum value.
     """
     return min(mx, max(m, v))
+
 
 def destroy_sprite_list(sprites: list[tsapp.Sprite]):
     """Destroys a list of sprites"""
     for sprite in sprites:
         sprite.destroy()
+        del sprite
 
 
 def is_sprite_hover(sprite: tsapp.Sprite) -> bool:
