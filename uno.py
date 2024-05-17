@@ -181,8 +181,8 @@ def gen_numeric_card() -> Card:
             "9",
         )
     )
-    color = random.choice("red", "green", "yellow", "blue")
-    return Card(face, color)
+    color = random.choice(("red", "green", "yellow", "blue"))
+    return Card(color, face)
 
 def gen_cards(number_of_cards: int) -> tuple[Card, ...]:
     """Generates a specified number of new cards."""

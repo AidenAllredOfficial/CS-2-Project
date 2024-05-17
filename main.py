@@ -171,49 +171,13 @@ def get_color_from_user() -> str:
             break
 
         # Fancy Animations
-
-        if u.is_sprite_hover(red_sprite):
-            red_sprite.scale = u.clamp(
-                sprite_scale, red_sprite.scale + 0.1, sprite_scale * 1.1
-            )
-        else:
-            red_sprite.scale = u.clamp(
-                sprite_scale, red_sprite.scale - 0.1, sprite_scale * 1.1
-            )
-
-        if u.is_sprite_hover(green_sprite):
-            green_sprite.scale = u.clamp(
-                sprite_scale, green_sprite.scale + 0.1, sprite_scale * 1.1
-            )
-        else:
-            green_sprite.scale = u.clamp(
-                sprite_scale, green_sprite.scale - 0.1, sprite_scale * 1.1
-            )
-
-        if u.is_sprite_hover(yellow_sprite):
-            yellow_sprite.scale = u.clamp(
-                sprite_scale, yellow_sprite.scale + 0.1, sprite_scale * 1.1
-            )
-        else:
-            yellow_sprite.scale = u.clamp(
-                sprite_scale, yellow_sprite.scale - 0.1, sprite_scale * 1.1
-            )
-
-        if u.is_sprite_hover(blue_sprite):
-            blue_sprite.scale = u.clamp(
-                sprite_scale, blue_sprite.scale + 0.1, sprite_scale * 1.1
-            )
-        else:
-            blue_sprite.scale = u.clamp(
-                sprite_scale, blue_sprite.scale - 0.1, sprite_scale * 1.1
-            )
-
-        if color is not None:
-            break
+        for sprite in (red_sprite, blue_sprite, green_sprite, yellow_sprite):
+            if u.is_sprite_hover(sprite):
+                sprite.scale = u.clamp(sprite_scale, sprite.scale + 0.1, sprite_scale * 1.1)
+            else:
+                sprite.scale = u.clamp(sprite_scale, sprite.scale - 0.1, sprite_scale * 1.1)
 
         window.finish_frame()
-
-    # Clean up
 
     red_sprite.destroy()
     green_sprite.destroy()
@@ -243,9 +207,23 @@ def animate_hand_frame():
 def next_turn():
     global current_player
     global player_hands_display
+    global skip
+
+    while window.is_running:
+        if u.sprite_clicked_released(next_player_button):
+            break
+        animate_hand_frame()
+        window.finish_frame()
+
+    mult = 2 if skip else 1
+    skip = False
+
+    print(f"## Player {current_player} ##")
+    print(f"Draw Out: {next_player_draw}")
+    print("")
 
     # Rolls over once it hits either end
-    current_player = (current_player + player_increment) % NUM_PLAYERS
+    current_player = (current_player + (player_increment * mult)) % NUM_PLAYERS
 
     u.destroy_sprite_list(player_hands_display)
     player_hands_display = display_computer_hands()
@@ -259,7 +237,6 @@ def animate_deck():
 
 def player_select_card(player_index: int) -> int:
     """Guarantees a card will be selected"""
-    print("Selecting card")
     global next_player_draw
     global player_hand_sprites
     global player_hand_cards
@@ -285,20 +262,21 @@ def player_select_card(player_index: int) -> int:
 
 
 def do_card_action(card: uno.Card):
-    print("Doing card Action")
     global current_player
     global player_increment
     global next_player_draw
     global top_card
+    global skip
 
+    print(f"Player {current_player+1} played {card}")
     # Execute Card Action
     match card.face:
-        case "+2":
-            next_player_draw += 2
         case "skip":
-            current_player += player_increment
+            skip = True
         case "reverse":
             player_increment *= -1
+        case "+2":
+            next_player_draw += 2
         case "+4":
             next_player_draw += 4
         case "wild":
@@ -322,26 +300,29 @@ def handle_drawing(player_index) -> (bool, list[uno.Card]):
         new_cards = uno.gen_cards(next_player_draw)
 
         next_player_draw = 0
-        print(new_cards)
         ret = False, new_cards
 
     # if can stack
     elif next_player_draw > 0 and len(playable_cards) > 0:
         ret = True, []
 
+    elif next_player_draw == 0 and len(playable_cards) == 0:
+        ret = True, [uno.gen_card(),]
+
     return tuple(ret)
 
 
 def display_computer_hands():
     sprites = []
-    x = 250
-    y = 100
-    width = 400
-    height = 300
+    x = 950
+    y = 50
+    width = 500
+    height = 400
 
     for row, cards in enumerate(player_hands[0:]):
         for i, card in enumerate(cards):
-            sprite = uno.get_card_sprite_back()
+            # sprite = uno.get_card_sprite_back()
+            sprite = uno.get_card_sprite(card)
             sprite.scale = 0.1
             sprite.x = x + (i * (min(30, width / len(cards))))   # Align X
             sprite.y = y + (row * (height / len(player_hands)))  # Align Y
@@ -352,6 +333,15 @@ def display_computer_hands():
         window.add_object(sprite)
 
     return sprites
+
+
+def check_win() -> int:
+    """Returns the winning player, if none, then returns -1"""
+    for i, hand in enumerate(player_hands):
+        if len(hand) == 0:
+            return i
+    else:
+        return -1
 
 
 # initialization stage
@@ -389,7 +379,7 @@ player_hand_cards = player_hands[0]
 player_hand_sprites = display_hand(player_hand_cards)
 
 # Top card init
-top_card = uno.gen_card()
+top_card = uno.gen_numeric_card()
 top_card_sprite = display_top_card(top_card)
 
 # Player Text init
@@ -399,6 +389,7 @@ set_status(f"Player #{current_player + 1} color: {top_card.color}")
 
 # Misc init
 player_increment = 1
+skip = False
 next_player_button = tsapp.Sprite("assets/buttons/next_player_button.png", 0, 0)
 next_player_button.scale = 1.5
 next_player_button.x = WIDTH - next_player_button.width - 40
@@ -425,9 +416,7 @@ while window.is_running:
         can_play, new_cards = handle_drawing(0)
         new_cards = list(new_cards)
 
-        # Add drawn cards to the deck
-        print(len(new_cards))
-        print(new_cards)
+        # Add drawn cards to the decka
 
         for card in new_cards:
             if not window.is_running:
@@ -436,9 +425,12 @@ while window.is_running:
             u.destroy_sprite_list(player_hand_sprites)
             player_hand_sprites = display_hand(player_hands[0])
 
-            print("Adding cards")
             time.sleep(0.1)
             window.finish_frame()
+
+        playable_cards = uno.get_playable_cards(player_hands[0], top_card, next_player_draw > 0)
+        if len(playable_cards) == 0:
+            can_play = False
 
         if can_play:
             playable_cards = uno.get_playable_cards(player_hand, top_card, next_player_draw > 0)
@@ -463,11 +455,14 @@ while window.is_running:
 
             # Update sprites.
             u.destroy_sprite_list(player_hand_sprites)
-            player_hand_sprites = display_hand(player_hands[0])
+            player_handsprites = display_hand(player_hands[0])
             window.finish_frame()
 
+            # time.sleep(2)
+
         else:
-            pass
+            print(f"Player {current_player + 1} cannot play")
+            # time.sleep(2)
 
     else:
         can_play, new_cards = handle_drawing(current_player)
@@ -479,7 +474,6 @@ while window.is_running:
             can_play = False
 
         if can_play:
-            playable_cards = uno.get_playable_cards(current_hand, top_card, next_player_draw > 0)
             selected_index = uno.pick_card_easy(current_hand, playable_cards)
             selected_card = current_hand[selected_index]
 
@@ -494,43 +488,23 @@ while window.is_running:
             top_card_sprite = display_top_card(top_card)
 
             # remove from player hand
-            print(len(player_hands[current_player]), selected_index)
             player_hands[current_player].pop(selected_index)
 
-            time.sleep(2)
+            # time.sleep(2)
+
+        else:
+            set_status(f"Player {current_player + 1} cannot play")
+            # time.sleep(2)
+
+    winner = check_win()
+
+    if winner != -1:
+        set_status(f"YOU WIN PLAYER #{current_player + 1}")
+        break
 
     next_turn()
 
     window.finish_frame()
-
-# Display Win screen
-
-win_splash = tsapp.Sprite("assets/screens/uno_win_splash.png", 0, 0)
-
-if win_splash.width / WIDTH < win_splash.height / HEIGHT:
-    win_splash.scale = WIDTH / win_splash.width + 0.01
-else:
-    win_splash.scale = (HEIGHT / win_splash.height) + 0.01
-
-win_splash.center = window.center
-
-window.add_object(win_splash)
-win_text = tsapp.TextLabel(
-    FONT,
-    140,
-    WIDTH,
-    0,
-    window.center_y - 70,
-    f"YOU WIN PLAYER #{winner + 1}!!",
-    (255, 255, 255),
-)
-
-win_text.x = 0
-win_text.y = HEIGHT - 70
-win_text.width = WIDTH
-win_text.align = "center"
-
-window.add_object(win_text)
 
 while window.is_running:
     window.finish_frame()
